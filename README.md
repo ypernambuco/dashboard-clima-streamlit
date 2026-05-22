@@ -66,6 +66,8 @@ streamlit run app.py
 
 ![Dashboard de clima](assets/screenshots/dashboard.png)
 
+O print usa uma amostra pequena de dados, suficiente para mostrar os filtros, KPIs e gráficos sem depender de uma base grande.
+
 ## Estrutura
 
 ```text
@@ -84,6 +86,7 @@ dashboard-clima-streamlit/
 - usa uma amostra pequena de dados;
 - não atualiza automaticamente a base;
 - ainda lê CSV local em vez de conectar direto ao SQLite;
+- os filtros são básicos e focados em cidade e período;
 - não possui autenticação nem publicação em cloud;
 - não tem testes automatizados.
 
