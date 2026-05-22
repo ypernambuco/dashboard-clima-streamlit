@@ -6,6 +6,30 @@ import streamlit as st
 
 
 DATA_FILE = Path("data/clima_tratado.csv")
+DATA_TYPE_LABELS = {
+    "historico": "Histórico",
+    "previsao": "Previsão",
+}
+DATA_TYPE_ORDER = ["historico", "previsao"]
+PERIOD_ORDER = ["Histórico", "Previsão"]
+PERIOD_COLOR_SCALE = alt.Scale(
+    domain=PERIOD_ORDER,
+    range=["#6b7280", "#14b8a6"],
+)
+TEMPERATURE_PERIOD_COLOR_SCALE = alt.Scale(
+    domain=PERIOD_ORDER,
+    range=["#fbbf24", "#f97316"],
+)
+PERIOD_DASH_SCALE = alt.Scale(
+    domain=PERIOD_ORDER,
+    range=[[0], [7, 5]],
+)
+WEEKDAY_ABBR = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"]
+X_AXIS_LABEL_EXPR = (
+    "{'Mon':'Seg','Tue':'Ter','Wed':'Qua','Thu':'Qui','Fri':'Sex',"
+    "'Sat':'Sáb','Sun':'Dom'}[timeFormat(datum.value, '%a')] + ' ' + "
+    "timeFormat(datum.value, '%d/%m')"
+)
 
 
 @st.cache_data
@@ -14,11 +38,34 @@ def load_data() -> pd.DataFrame:
     dataframe["data"] = pd.to_datetime(dataframe["data"])
     if "tipo_dado" not in dataframe.columns:
         dataframe["tipo_dado"] = "previsao"
+    dataframe["periodo"] = dataframe["tipo_dado"].map(DATA_TYPE_LABELS).fillna(
+        dataframe["tipo_dado"].str.capitalize()
+    )
+    dataframe["data_rotulo"] = dataframe["data"].map(format_date_label)
     return dataframe
+
+
+def format_date_label(value: pd.Timestamp) -> str:
+    return f"{WEEKDAY_ABBR[value.weekday()]} {value:%d/%m}"
 
 
 def format_number(value: float, suffix: str = "") -> str:
     return f"{value:,.1f}{suffix}".replace(",", "X").replace(".", ",").replace("X", ".")
+
+
+def order_data_types(data_types: list[str]) -> list[str]:
+    ordered = [data_type for data_type in DATA_TYPE_ORDER if data_type in data_types]
+    ordered.extend(data_type for data_type in sorted(data_types) if data_type not in ordered)
+    return ordered
+
+
+def format_data_type(data_type: str) -> str:
+    return DATA_TYPE_LABELS.get(data_type, data_type.capitalize())
+
+
+def get_date_tick_step(dataframe: pd.DataFrame) -> int:
+    date_count = dataframe["data"].dt.normalize().nunique()
+    return max(1, round(date_count / 6))
 
 
 def filter_data(
@@ -39,28 +86,118 @@ def filter_data(
 
 
 def build_temperature_chart(dataframe: pd.DataFrame) -> alt.Chart:
-    return (
-        alt.Chart(dataframe)
-        .mark_line(point=True)
-        .encode(
-            x=alt.X("data:T", title="Data"),
-            y=alt.Y("temperatura_media_c:Q", title="Temperatura média (°C)"),
-            color=alt.Color("cidade:N", title="Cidade"),
-            strokeDash=alt.StrokeDash("tipo_dado:N", title="Tipo de dado"),
-            tooltip=[
-                alt.Tooltip("cidade:N", title="Cidade"),
-                alt.Tooltip("tipo_dado:N", title="Tipo de dado"),
-                alt.Tooltip("data:T", title="Data"),
-                alt.Tooltip("temperatura_media_c:Q", title="Temperatura média", format=".1f"),
-            ],
+    tick_step = get_date_tick_step(dataframe)
+    base = alt.Chart(dataframe).encode(
+        x=alt.X(
+            "data:T",
+            title=None,
+            axis=alt.Axis(
+                labelExpr=X_AXIS_LABEL_EXPR,
+                tickCount=alt.TimeIntervalStep("day", tick_step),
+                labelAngle=0,
+                labelPadding=10,
+                labelOverlap="parity",
+                labelBound=True,
+                grid=False,
+                ticks=False,
+            ),
+        ),
+        y=alt.Y("temperatura_media_c:Q", title="Temperatura média (°C)"),
+    )
+
+    line = base.mark_line(strokeWidth=2.6).encode(
+        color=alt.Color("cidade:N", title="Cidade"),
+        strokeDash=alt.StrokeDash(
+            "periodo:N",
+            sort=PERIOD_ORDER,
+            scale=PERIOD_DASH_SCALE,
+            legend=alt.Legend(title="Período", symbolStrokeColor="#94a3b8"),
+        ),
+        tooltip=[
+            alt.Tooltip("cidade:N", title="Cidade"),
+            alt.Tooltip("periodo:N", title="Período"),
+            alt.Tooltip("data_rotulo:N", title="Data"),
+            alt.Tooltip("temperatura_media_c:Q", title="Temperatura média", format=".1f"),
+        ],
+    )
+
+    points = line.mark_circle(size=42, opacity=0.75)
+    chart = line + points
+
+    forecast = dataframe[dataframe["tipo_dado"] == "previsao"]
+    if not forecast.empty:
+        forecast_start = forecast["data"].min()
+        forecast_end = dataframe["data"].max()
+        forecast_band_data = pd.DataFrame(
+            {"inicio": [forecast_start], "fim": [forecast_end + pd.Timedelta(days=1)]}
         )
-        .properties(height=360)
+        forecast_band = (
+            alt.Chart(forecast_band_data)
+            .mark_rect(color="#14b8a6", opacity=0.08)
+            .encode(x=alt.X("inicio:T"), x2=alt.X2("fim:T"), tooltip=alt.value(None))
+        )
+        forecast_rule = (
+            alt.Chart(pd.DataFrame({"data": [forecast_start]}))
+            .mark_rule(color="#94a3b8", strokeDash=[4, 4], opacity=0.65)
+            .encode(x=alt.X("data:T"), tooltip=alt.value(None))
+        )
+        chart = forecast_band + chart + forecast_rule + build_period_labels(dataframe)
+
+    return (
+        chart.properties(height=360)
+        .configure_view(strokeWidth=0)
+        .configure_axis(
+            labelColor="#475569",
+            titleColor="#334155",
+            gridColor="#e5e7eb",
+            domain=False,
+        )
+        .configure_legend(
+            labelColor="#334155",
+            titleColor="#334155",
+            orient="bottom",
+            direction="horizontal",
+        )
+    )
+
+
+def build_period_labels(dataframe: pd.DataFrame) -> alt.Chart:
+    label_rows = []
+    for data_type in DATA_TYPE_ORDER:
+        period_data = dataframe[dataframe["tipo_dado"] == data_type]
+        if period_data.empty:
+            continue
+
+        start_date = period_data["data"].min()
+        end_date = period_data["data"].max()
+        middle_date = start_date + (end_date - start_date) / 2
+        label_rows.append(
+            {
+                "data": middle_date,
+                "periodo": format_data_type(data_type),
+            }
+        )
+
+    return (
+        alt.Chart(pd.DataFrame(label_rows))
+        .mark_text(
+            baseline="top",
+            fontSize=12,
+            fontWeight=600,
+            color="#475569",
+        )
+        .encode(
+            x=alt.X("data:T"),
+            y=alt.value(8),
+            text=alt.Text("periodo:N"),
+            tooltip=alt.value(None),
+        )
     )
 
 
 def build_rain_chart(dataframe: pd.DataFrame) -> alt.Chart:
     rain_by_city = (
-        dataframe.groupby(["cidade", "tipo_dado"], as_index=False)["precipitacao_mm"]
+        dataframe.groupby(["cidade", "periodo"], as_index=False)["precipitacao_mm"]
         .sum()
         .sort_values("precipitacao_mm", ascending=False)
     )
@@ -70,12 +207,17 @@ def build_rain_chart(dataframe: pd.DataFrame) -> alt.Chart:
         .mark_bar(cornerRadiusTopLeft=4, cornerRadiusTopRight=4)
         .encode(
             x=alt.X("cidade:N", title="Cidade", sort="-y"),
-            xOffset=alt.XOffset("tipo_dado:N"),
+            xOffset=alt.XOffset("periodo:N", sort=PERIOD_ORDER),
             y=alt.Y("precipitacao_mm:Q", title="Precipitação acumulada (mm)"),
-            color=alt.Color("tipo_dado:N", title="Tipo de dado"),
+            color=alt.Color(
+                "periodo:N",
+                title="Período",
+                sort=PERIOD_ORDER,
+                scale=PERIOD_COLOR_SCALE,
+            ),
             tooltip=[
                 alt.Tooltip("cidade:N", title="Cidade"),
-                alt.Tooltip("tipo_dado:N", title="Tipo de dado"),
+                alt.Tooltip("periodo:N", title="Período"),
                 alt.Tooltip("precipitacao_mm:Q", title="Precipitação", format=".1f"),
             ],
         )
@@ -85,7 +227,7 @@ def build_rain_chart(dataframe: pd.DataFrame) -> alt.Chart:
 
 def build_city_temperature_chart(dataframe: pd.DataFrame) -> alt.Chart:
     temp_by_city = (
-        dataframe.groupby(["cidade", "tipo_dado"], as_index=False)["temperatura_media_c"]
+        dataframe.groupby(["cidade", "periodo"], as_index=False)["temperatura_media_c"]
         .mean()
         .sort_values("temperatura_media_c", ascending=False)
     )
@@ -95,12 +237,17 @@ def build_city_temperature_chart(dataframe: pd.DataFrame) -> alt.Chart:
         .mark_bar(cornerRadiusTopLeft=4, cornerRadiusTopRight=4)
         .encode(
             x=alt.X("cidade:N", title="Cidade", sort="-y"),
-            xOffset=alt.XOffset("tipo_dado:N"),
+            xOffset=alt.XOffset("periodo:N", sort=PERIOD_ORDER),
             y=alt.Y("temperatura_media_c:Q", title="Temperatura média (°C)"),
-            color=alt.Color("tipo_dado:N", title="Tipo de dado"),
+            color=alt.Color(
+                "periodo:N",
+                title="Período",
+                sort=PERIOD_ORDER,
+                scale=TEMPERATURE_PERIOD_COLOR_SCALE,
+            ),
             tooltip=[
                 alt.Tooltip("cidade:N", title="Cidade"),
-                alt.Tooltip("tipo_dado:N", title="Tipo de dado"),
+                alt.Tooltip("periodo:N", title="Período"),
                 alt.Tooltip("temperatura_media_c:Q", title="Temperatura média", format=".1f"),
             ],
         )
@@ -120,7 +267,7 @@ def main() -> None:
     st.caption("Visualização simples dos dados tratados pelo projeto etl-clima-python-sqlite.")
 
     cities = sorted(dataframe["cidade"].unique())
-    data_types = sorted(dataframe["tipo_dado"].unique())
+    data_types = order_data_types(dataframe["tipo_dado"].unique().tolist())
     min_date = dataframe["data"].min().date()
     max_date = dataframe["data"].max().date()
 
@@ -135,6 +282,7 @@ def main() -> None:
             "Tipo de dado",
             options=data_types,
             default=data_types,
+            format_func=format_data_type,
         )
         date_range = st.date_input(
             "Período",
