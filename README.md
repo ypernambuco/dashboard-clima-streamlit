@@ -2,7 +2,7 @@
 
 Dashboard simples em Streamlit para visualizar dados de clima tratados no projeto `etl-clima-python-sqlite`.
 
-A ideia é mostrar indicadores básicos, filtros e gráficos a partir de uma base pequena, sem criar uma estrutura mais complexa do que o necessário.
+A ideia é mostrar indicadores básicos, filtros e gráficos a partir de uma base pequena, sem complicar a estrutura.
 
 ## Objetivo
 
@@ -24,6 +24,8 @@ Ele foi gerado a partir do projeto:
 
 https://github.com/ypernambuco/etl-clima-python-sqlite
 
+A amostra é pequena de propósito, só para deixar o dashboard fácil de rodar e entender.
+
 ## Como Rodar
 
 Crie e ative um ambiente virtual:
@@ -34,7 +36,7 @@ python -m venv .venv
 
 No Windows:
 
-```bash
+```powershell
 .venv\Scripts\activate
 ```
 
