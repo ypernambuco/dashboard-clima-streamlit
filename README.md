@@ -1,43 +1,33 @@
 # dashboard-clima-streamlit
 
-Dashboard simples em Streamlit para visualizar dados de clima tratados no projeto `etl-clima-python-sqlite`.
+Dashboard simples em Streamlit para visualizar dados de clima tratados pelo projeto `etl-clima-python-sqlite`.
+
+O app mostra histórico recente dos últimos 7 dias, previsão futura, KPIs, gráficos e uma tabela filtrável. É um projeto de estudo para praticar visualização de dados, não um sistema profissional de meteorologia.
 
 ## Dashboard Online
 
 https://dashboard-clima.streamlit.app/
 
-O app está publicado no Streamlit Community Cloud. A ideia continua sendo simples: mostrar os dados de clima de forma visual, sem transformar o projeto em algo grande demais.
+O dashboard está publicado no Streamlit Community Cloud usando este repositório do GitHub.
 
-O dashboard é compatível com a base que junta histórico recente e previsão futura, identificando cada linha pela coluna `tipo_dado`.
-
-A ideia é mostrar KPIs, filtros e gráficos a partir de uma base pequena, mantendo o projeto simples e fácil de entender.
-
-## Objetivo
+## Objetivo Do Projeto
 
 - criar uma visualização simples para dados de clima;
 - mostrar indicadores por cidade e período;
-- permitir filtrar dados históricos e dados de previsão;
-- permitir filtros básicos;
-- exibir gráficos e uma tabela com os dados filtrados;
-- praticar Streamlit em um contexto de dados.
+- filtrar dados históricos e dados de previsão;
+- praticar Streamlit em um contexto de dados;
+- conectar a visualização com uma base gerada por um pipeline ETL.
 
-## Fonte Dos Dados
+## Tecnologias Utilizadas
 
-O arquivo usado pelo dashboard está em:
+- Python
+- Streamlit
+- pandas
+- Altair
+- CSV
+- Streamlit Community Cloud
 
-```text
-data/clima_tratado.csv
-```
-
-Ele foi gerado a partir deste projeto:
-
-https://github.com/ypernambuco/etl-clima-python-sqlite
-
-A amostra é pequena de propósito. O foco aqui é visualizar os dados de forma simples, sem depender de uma base grande ou de uma integração mais complexa.
-
-A base atual contém histórico recente dos últimos 7 dias e previsão futura. O campo `tipo_dado` permite separar `historico` e `previsao` nos filtros e nos gráficos. Se a coluna não existir em uma base antiga, o dashboard continua abrindo e considera os dados como `previsao`.
-
-## Como Rodar
+## Como Executar
 
 Crie e ative um ambiente virtual:
 
@@ -65,42 +55,15 @@ streamlit run app.py
 
 ## Deploy
 
-Este dashboard está publicado no Streamlit Community Cloud usando este repositório do GitHub.
-
-Configuração usada:
+Configuração usada no Streamlit Community Cloud:
 
 - arquivo principal: `app.py`
 - branch: `main`
-- Python configurado nas opções avançadas do Streamlit Cloud
+- Python configurado nas opções avançadas do deploy
 
-O projeto também mantém um arquivo `runtime.txt`. A versão do Python foi ajustada nas configurações avançadas do Streamlit Cloud para deixar o deploy compatível com as dependências.
+O projeto também mantém um `runtime.txt`. A versão do Python foi ajustada no Streamlit Cloud para manter o deploy compatível com as dependências.
 
-## O Que O Dashboard Mostra
-
-- temperatura média no período;
-- maior e menor temperatura;
-- precipitação acumulada;
-- quantidade de dias com chuva;
-- comparação entre cidades;
-- evolução diária da temperatura;
-- separação entre histórico e previsão;
-- tabela com os dados filtrados.
-
-## Screenshots
-
-### Visão geral
-
-![Dashboard de clima](assets/screenshots/dashboard.png)
-
-O print principal mostra o dashboard funcionando com filtros, KPIs e o gráfico de temperatura. Ele fica logo depois da seção "O Que O Dashboard Mostra" porque ajuda a visualizar o resultado antes de entrar na estrutura do projeto.
-
-### Gráficos e tabela
-
-![Gráficos e tabela de dados filtrados](assets/screenshots/tabela-dados.png)
-
-Este segundo print mostra os gráficos complementares e a tabela filtrada. A ideia é deixar a evidência visual completa sem exagerar na quantidade de imagens.
-
-## Estrutura
+## Estrutura De Pastas
 
 ```text
 dashboard-clima-streamlit/
@@ -113,37 +76,57 @@ dashboard-clima-streamlit/
 |-- app.py
 |-- README.md
 |-- requirements.txt
+|-- runtime.txt
 ```
 
-## Aprendizados
+## Fonte Dos Dados
 
-Neste projeto, pratiquei:
-- criação de dashboard com Streamlit;
-- leitura de CSV com pandas;
-- uso de filtros por cidade e período;
-- criação de KPIs simples;
-- exibição de gráficos e tabelas;
-- organização básica de um projeto visual.
+O dashboard lê o arquivo:
 
-Também foi útil separar este dashboard do ETL. Assim, o projeto fica focado só na parte de visualização dos dados.
+```text
+data/clima_tratado.csv
+```
+
+Esse CSV é gerado pelo projeto:
+
+https://github.com/ypernambuco/etl-clima-python-sqlite
+
+A base atual contém histórico recente dos últimos 7 dias e previsão futura. A coluna `tipo_dado` separa os registros em `historico` e `previsao`.
+
+## Screenshots
+
+### Visão Geral
+
+![Dashboard de clima](assets/screenshots/dashboard.png)
+
+### Gráficos E Tabela
+
+![Gráficos e tabela de dados filtrados](assets/screenshots/tabela-dados.png)
+
+## O Que Aprendi
+
+- criar um dashboard com Streamlit;
+- carregar uma base CSV com pandas;
+- usar filtros por cidade, período e tipo de dado;
+- criar KPIs simples;
+- montar gráficos com Altair;
+- publicar um app no Streamlit Community Cloud;
+- documentar o link de deploy e as limitações do projeto.
 
 ## Limitações
 
-O projeto ainda tem algumas limitações:
-
-- usa uma amostra pequena de dados;
+- usa uma base pequena;
 - depende dos dados gerados pelo ETL;
-- não atualiza automaticamente sozinho sem novo pipeline;
+- depende da API de clima usada pelo projeto de ETL;
+- os dados históricos são limitados;
+- não atualiza automaticamente sozinho sem rodar um novo pipeline;
 - lê um CSV local em vez de conectar direto ao SQLite;
-- os filtros ainda são simples;
-- não possui autenticação;
-- não possui testes automatizados.
-
-O objetivo foi manter o dashboard simples e fácil de explicar.
+- não é um sistema profissional de meteorologia;
+- ainda não possui testes automatizados.
 
 ## Próximos Passos
 
 - conectar diretamente ao SQLite do projeto de ETL;
 - adicionar opção de upload de CSV;
 - incluir mais cidades ou períodos maiores;
-- adicionar uma página simples explicando a origem dos dados.
+- melhorar a explicação da origem dos dados dentro do próprio app.
