@@ -2,14 +2,14 @@
 
 Dashboard simples em Streamlit para visualizar dados de clima tratados no projeto `etl-clima-python-sqlite`.
 
-A ideia é mostrar indicadores básicos, filtros e gráficos a partir de uma base pequena, sem complicar a estrutura.
+A ideia é mostrar KPIs, filtros e gráficos a partir de uma base pequena, mantendo o projeto simples e fácil de entender.
 
 ## Objetivo
 
 - criar uma visualização simples para dados de clima;
-- mostrar KPIs por período e cidade;
+- mostrar indicadores por cidade e período;
 - permitir filtros básicos;
-- exibir gráficos e tabela detalhada;
+- exibir gráficos e uma tabela com os dados filtrados;
 - praticar Streamlit em um contexto de dados.
 
 ## Fonte Dos Dados
@@ -20,11 +20,11 @@ O arquivo usado pelo dashboard está em:
 data/clima_tratado.csv
 ```
 
-Ele foi gerado a partir do projeto:
+Ele foi gerado a partir deste projeto:
 
 https://github.com/ypernambuco/etl-clima-python-sqlite
 
-A amostra é pequena de propósito, só para deixar o dashboard fácil de rodar e entender.
+A amostra é pequena de propósito. O foco aqui é visualizar os dados de forma simples, sem depender de uma base grande ou de uma integração mais complexa.
 
 ## Como Rodar
 
@@ -66,7 +66,7 @@ streamlit run app.py
 
 ![Dashboard de clima](assets/screenshots/dashboard.png)
 
-O print usa uma amostra pequena de dados, suficiente para mostrar os filtros, KPIs e gráficos sem depender de uma base grande.
+O print usa uma amostra pequena de dados, suficiente para mostrar os filtros, KPIs e gráficos principais.
 
 ## Estrutura
 
@@ -81,16 +81,31 @@ dashboard-clima-streamlit/
 |-- requirements.txt
 ```
 
+## Aprendizados
+
+Neste projeto, pratiquei:
+- criação de dashboard com Streamlit;
+- leitura de CSV com pandas;
+- uso de filtros por cidade e período;
+- criação de KPIs simples;
+- exibição de gráficos e tabelas;
+- organização básica de um projeto visual.
+
+Também foi útil separar este dashboard do ETL. Assim, o projeto fica focado só na parte de visualização dos dados.
+
 ## Limitações
+
+O projeto ainda tem algumas limitações:
 
 - usa uma amostra pequena de dados;
 - não atualiza automaticamente a base;
-- ainda lê CSV local em vez de conectar direto ao SQLite;
-- os filtros são básicos e focados em cidade e período;
-- não possui autenticação nem publicação em cloud;
-- não tem testes automatizados.
+- lê um CSV local em vez de conectar direto ao SQLite;
+- os filtros ainda são simples;
+- não possui autenticação;
+- não está publicado em cloud;
+- não possui testes automatizados.
 
-Essas limitações fazem parte do escopo atual. O foco é ter um dashboard simples, útil e fácil de explicar.
+O objetivo foi manter o dashboard simples e fácil de explicar.
 
 ## Próximos Passos
 
