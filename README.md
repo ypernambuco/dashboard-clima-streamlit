@@ -2,6 +2,12 @@
 
 Dashboard simples em Streamlit para visualizar dados de clima tratados no projeto `etl-clima-python-sqlite`.
 
+## Dashboard Online
+
+https://dashboard-clima.streamlit.app/
+
+O app está publicado no Streamlit Community Cloud. A ideia continua sendo simples: mostrar os dados de clima de forma visual, sem transformar o projeto em algo grande demais.
+
 O dashboard é compatível com a base que junta histórico recente e previsão futura, identificando cada linha pela coluna `tipo_dado`.
 
 A ideia é mostrar KPIs, filtros e gráficos a partir de uma base pequena, mantendo o projeto simples e fácil de entender.
@@ -29,7 +35,7 @@ https://github.com/ypernambuco/etl-clima-python-sqlite
 
 A amostra é pequena de propósito. O foco aqui é visualizar os dados de forma simples, sem depender de uma base grande ou de uma integração mais complexa.
 
-Quando o CSV contém a coluna `tipo_dado`, o dashboard permite filtrar os valores `historico` e `previsao`. Se a coluna não existir em uma base antiga, o dashboard continua abrindo e considera os dados como `previsao`.
+A base atual contém histórico recente dos últimos 7 dias e previsão futura. O campo `tipo_dado` permite separar `historico` e `previsao` nos filtros e nos gráficos. Se a coluna não existir em uma base antiga, o dashboard continua abrindo e considera os dados como `previsao`.
 
 ## Como Rodar
 
@@ -57,6 +63,18 @@ Execute o dashboard:
 streamlit run app.py
 ```
 
+## Deploy
+
+Este dashboard está publicado no Streamlit Community Cloud usando este repositório do GitHub.
+
+Configuração usada:
+
+- arquivo principal: `app.py`
+- branch: `main`
+- Python configurado nas opções avançadas do Streamlit Cloud
+
+O projeto também mantém um arquivo `runtime.txt`. A versão do Python foi ajustada nas configurações avançadas do Streamlit Cloud para deixar o deploy compatível com as dependências.
+
 ## O Que O Dashboard Mostra
 
 - temperatura média no período;
@@ -72,7 +90,7 @@ streamlit run app.py
 
 ### Visão geral
 
-![Dashboard de clima com filtros, KPIs e gráfico](assets/screenshots/dashboard.png)
+![Dashboard de clima](assets/screenshots/dashboard.png)
 
 O print principal mostra o dashboard funcionando com filtros, KPIs e o gráfico de temperatura. Ele fica logo depois da seção "O Que O Dashboard Mostra" porque ajuda a visualizar o resultado antes de entrar na estrutura do projeto.
 
@@ -114,11 +132,11 @@ Também foi útil separar este dashboard do ETL. Assim, o projeto fica focado s�
 O projeto ainda tem algumas limitações:
 
 - usa uma amostra pequena de dados;
-- não atualiza automaticamente a base;
+- depende dos dados gerados pelo ETL;
+- não atualiza automaticamente sozinho sem novo pipeline;
 - lê um CSV local em vez de conectar direto ao SQLite;
 - os filtros ainda são simples;
 - não possui autenticação;
-- não está publicado em cloud;
 - não possui testes automatizados.
 
 O objetivo foi manter o dashboard simples e fácil de explicar.
@@ -127,6 +145,5 @@ O objetivo foi manter o dashboard simples e fácil de explicar.
 
 - conectar diretamente ao SQLite do projeto de ETL;
 - adicionar opção de upload de CSV;
-- publicar no Streamlit Community Cloud;
 - incluir mais cidades ou períodos maiores;
 - adicionar uma página simples explicando a origem dos dados.
