@@ -2,12 +2,15 @@
 
 Dashboard simples em Streamlit para visualizar dados de clima tratados no projeto `etl-clima-python-sqlite`.
 
+O dashboard é compatível com a base que junta histórico recente e previsão futura, identificando cada linha pela coluna `tipo_dado`.
+
 A ideia é mostrar KPIs, filtros e gráficos a partir de uma base pequena, mantendo o projeto simples e fácil de entender.
 
 ## Objetivo
 
 - criar uma visualização simples para dados de clima;
 - mostrar indicadores por cidade e período;
+- permitir filtrar dados históricos e dados de previsão;
 - permitir filtros básicos;
 - exibir gráficos e uma tabela com os dados filtrados;
 - praticar Streamlit em um contexto de dados.
@@ -25,6 +28,8 @@ Ele foi gerado a partir deste projeto:
 https://github.com/ypernambuco/etl-clima-python-sqlite
 
 A amostra é pequena de propósito. O foco aqui é visualizar os dados de forma simples, sem depender de uma base grande ou de uma integração mais complexa.
+
+Quando o CSV contém a coluna `tipo_dado`, o dashboard permite filtrar os valores `historico` e `previsao`. Se a coluna não existir em uma base antiga, o dashboard continua abrindo e considera os dados como `previsao`.
 
 ## Como Rodar
 
@@ -60,13 +65,22 @@ streamlit run app.py
 - quantidade de dias com chuva;
 - comparação entre cidades;
 - evolução diária da temperatura;
+- separação entre histórico e previsão;
 - tabela com os dados filtrados.
 
-## Screenshot
+## Screenshots
 
-![Dashboard de clima](assets/screenshots/dashboard.png)
+### Visão geral
 
-O print usa uma amostra pequena de dados, suficiente para mostrar os filtros, KPIs e gráficos principais.
+![Dashboard de clima com filtros, KPIs e gráfico](assets/screenshots/dashboard.png)
+
+O print principal mostra o dashboard funcionando com filtros, KPIs e o gráfico de temperatura. Ele fica logo depois da seção "O Que O Dashboard Mostra" porque ajuda a visualizar o resultado antes de entrar na estrutura do projeto.
+
+### Gráficos e tabela
+
+![Gráficos e tabela de dados filtrados](assets/screenshots/tabela-dados.png)
+
+Este segundo print mostra os gráficos complementares e a tabela filtrada. A ideia é deixar a evidência visual completa sem exagerar na quantidade de imagens.
 
 ## Estrutura
 
@@ -74,6 +88,8 @@ O print usa uma amostra pequena de dados, suficiente para mostrar os filtros, KP
 dashboard-clima-streamlit/
 |-- assets/
 |   |-- screenshots/
+|   |   |-- dashboard.png
+|   |   |-- tabela-dados.png
 |-- data/
 |   |-- clima_tratado.csv
 |-- app.py

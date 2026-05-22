@@ -12,6 +12,8 @@ DATA_FILE = Path("data/clima_tratado.csv")
 def load_data() -> pd.DataFrame:
     dataframe = pd.read_csv(DATA_FILE)
     dataframe["data"] = pd.to_datetime(dataframe["data"])
+    if "tipo_dado" not in dataframe.columns:
+        dataframe["tipo_dado"] = "previsao"
     return dataframe
 
 
@@ -19,11 +21,17 @@ def format_number(value: float, suffix: str = "") -> str:
     return f"{value:,.1f}{suffix}".replace(",", "X").replace(".", ",").replace("X", ".")
 
 
-def filter_data(dataframe: pd.DataFrame, selected_cities: list[str], date_range: tuple) -> pd.DataFrame:
+def filter_data(
+    dataframe: pd.DataFrame,
+    selected_cities: list[str],
+    selected_data_types: list[str],
+    date_range: tuple,
+) -> pd.DataFrame:
     start_date, end_date = pd.to_datetime(date_range[0]), pd.to_datetime(date_range[1])
 
     filtered = dataframe[
         (dataframe["cidade"].isin(selected_cities))
+        & (dataframe["tipo_dado"].isin(selected_data_types))
         & (dataframe["data"] >= start_date)
         & (dataframe["data"] <= end_date)
     ]
@@ -38,8 +46,10 @@ def build_temperature_chart(dataframe: pd.DataFrame) -> alt.Chart:
             x=alt.X("data:T", title="Data"),
             y=alt.Y("temperatura_media_c:Q", title="Temperatura média (°C)"),
             color=alt.Color("cidade:N", title="Cidade"),
+            strokeDash=alt.StrokeDash("tipo_dado:N", title="Tipo de dado"),
             tooltip=[
                 alt.Tooltip("cidade:N", title="Cidade"),
+                alt.Tooltip("tipo_dado:N", title="Tipo de dado"),
                 alt.Tooltip("data:T", title="Data"),
                 alt.Tooltip("temperatura_media_c:Q", title="Temperatura média", format=".1f"),
             ],
@@ -50,7 +60,7 @@ def build_temperature_chart(dataframe: pd.DataFrame) -> alt.Chart:
 
 def build_rain_chart(dataframe: pd.DataFrame) -> alt.Chart:
     rain_by_city = (
-        dataframe.groupby("cidade", as_index=False)["precipitacao_mm"]
+        dataframe.groupby(["cidade", "tipo_dado"], as_index=False)["precipitacao_mm"]
         .sum()
         .sort_values("precipitacao_mm", ascending=False)
     )
@@ -60,10 +70,12 @@ def build_rain_chart(dataframe: pd.DataFrame) -> alt.Chart:
         .mark_bar(cornerRadiusTopLeft=4, cornerRadiusTopRight=4)
         .encode(
             x=alt.X("cidade:N", title="Cidade", sort="-y"),
+            xOffset=alt.XOffset("tipo_dado:N"),
             y=alt.Y("precipitacao_mm:Q", title="Precipitação acumulada (mm)"),
-            color=alt.Color("cidade:N", legend=None),
+            color=alt.Color("tipo_dado:N", title="Tipo de dado"),
             tooltip=[
                 alt.Tooltip("cidade:N", title="Cidade"),
+                alt.Tooltip("tipo_dado:N", title="Tipo de dado"),
                 alt.Tooltip("precipitacao_mm:Q", title="Precipitação", format=".1f"),
             ],
         )
@@ -73,7 +85,7 @@ def build_rain_chart(dataframe: pd.DataFrame) -> alt.Chart:
 
 def build_city_temperature_chart(dataframe: pd.DataFrame) -> alt.Chart:
     temp_by_city = (
-        dataframe.groupby("cidade", as_index=False)["temperatura_media_c"]
+        dataframe.groupby(["cidade", "tipo_dado"], as_index=False)["temperatura_media_c"]
         .mean()
         .sort_values("temperatura_media_c", ascending=False)
     )
@@ -83,10 +95,12 @@ def build_city_temperature_chart(dataframe: pd.DataFrame) -> alt.Chart:
         .mark_bar(cornerRadiusTopLeft=4, cornerRadiusTopRight=4)
         .encode(
             x=alt.X("cidade:N", title="Cidade", sort="-y"),
+            xOffset=alt.XOffset("tipo_dado:N"),
             y=alt.Y("temperatura_media_c:Q", title="Temperatura média (°C)"),
-            color=alt.Color("cidade:N", legend=None),
+            color=alt.Color("tipo_dado:N", title="Tipo de dado"),
             tooltip=[
                 alt.Tooltip("cidade:N", title="Cidade"),
+                alt.Tooltip("tipo_dado:N", title="Tipo de dado"),
                 alt.Tooltip("temperatura_media_c:Q", title="Temperatura média", format=".1f"),
             ],
         )
@@ -106,6 +120,7 @@ def main() -> None:
     st.caption("Visualização simples dos dados tratados pelo projeto etl-clima-python-sqlite.")
 
     cities = sorted(dataframe["cidade"].unique())
+    data_types = sorted(dataframe["tipo_dado"].unique())
     min_date = dataframe["data"].min().date()
     max_date = dataframe["data"].max().date()
 
@@ -116,6 +131,11 @@ def main() -> None:
             options=cities,
             default=cities,
         )
+        selected_data_types = st.multiselect(
+            "Tipo de dado",
+            options=data_types,
+            default=data_types,
+        )
         date_range = st.date_input(
             "Período",
             value=(min_date, max_date),
@@ -124,11 +144,11 @@ def main() -> None:
         )
         only_rainy_days = st.checkbox("Mostrar apenas dias com chuva")
 
-    if len(date_range) != 2 or not selected_cities:
-        st.warning("Selecione pelo menos uma cidade e um período válido.")
+    if len(date_range) != 2 or not selected_cities or not selected_data_types:
+        st.warning("Selecione pelo menos uma cidade, um tipo de dado e um período válido.")
         return
 
-    filtered = filter_data(dataframe, selected_cities, date_range)
+    filtered = filter_data(dataframe, selected_cities, selected_data_types, date_range)
     if only_rainy_days:
         filtered = filtered[filtered["precipitacao_mm"] > 0]
 
