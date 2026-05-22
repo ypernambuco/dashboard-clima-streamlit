@@ -97,7 +97,6 @@ def build_city_temperature_chart(dataframe: pd.DataFrame) -> alt.Chart:
 def main() -> None:
     st.set_page_config(
         page_title="Dashboard de Clima",
-        page_icon="☀️",
         layout="wide",
     )
 
@@ -143,12 +142,14 @@ def main() -> None:
     total_rain = filtered["precipitacao_mm"].sum()
     rainy_days = int((filtered["precipitacao_mm"] > 0).sum())
 
-    kpi_columns = st.columns(5)
-    kpi_columns[0].metric("Temperatura média", format_number(average_temp, " °C"))
-    kpi_columns[1].metric("Maior temperatura", format_number(max_temp, " °C"))
-    kpi_columns[2].metric("Menor temperatura", format_number(min_temp, " °C"))
-    kpi_columns[3].metric("Chuva acumulada", format_number(total_rain, " mm"))
-    kpi_columns[4].metric("Dias com chuva", rainy_days)
+    first_kpi_row = st.columns(3)
+    first_kpi_row[0].metric("Temperatura média", format_number(average_temp, " °C"))
+    first_kpi_row[1].metric("Maior temperatura", format_number(max_temp, " °C"))
+    first_kpi_row[2].metric("Menor temperatura", format_number(min_temp, " °C"))
+
+    second_kpi_row = st.columns(2)
+    second_kpi_row[0].metric("Chuva acumulada", format_number(total_rain, " mm"))
+    second_kpi_row[1].metric("Dias com chuva", rainy_days)
 
     st.divider()
 

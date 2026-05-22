@@ -60,6 +60,10 @@ streamlit run app.py
 - evolução diária da temperatura;
 - tabela com os dados filtrados.
 
+## Screenshot
+
+![Dashboard de clima](assets/screenshots/dashboard.png)
+
 ## Estrutura
 
 ```text
